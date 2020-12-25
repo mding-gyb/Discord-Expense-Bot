@@ -13,7 +13,6 @@ import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 
 public class Commands extends ListenerAdapter {
-	public Map<Pair,Integer> expenses = new HashMap<Pair,Integer>();
 	
 	public void onGuildMessageReceived(GuildMessageReceivedEvent event) {
 		String[] args = event.getMessage().getContentRaw().split(" ");
@@ -38,13 +37,13 @@ public class Commands extends ListenerAdapter {
 				help.clear();
 			} else if (args[0].equals("expense") && args[1].equals("add") && args.length<5) {
 				EmbedBuilder invalidAdd = new EmbedBuilder();
-				invalidAdd.setDescription("Add must be in format \"expense add (item) (names ...) (amounts ...)\" ");
+				invalidAdd.setDescription("Add must be in format \"expense add (item) (names ...) (amounts ...)\".");
 
 				event.getChannel().sendTyping().queue();
 				event.getChannel().sendMessage(invalidAdd.build()).queue();
 			} else if (args[0].equals("expense") && args[1].equals("remove") && args.length<5) {
 				EmbedBuilder invalidRemove = new EmbedBuilder();
-				invalidRemove.setDescription("Remove must be in format \"expense remove (item) (names ...) (amounts ...)\" ");
+				invalidRemove.setDescription("Remove must be in format \"expense remove (item) (names ...) (amounts ...)\".");
 
 				event.getChannel().sendTyping().queue();
 				event.getChannel().sendMessage(invalidRemove.build()).queue();
@@ -57,7 +56,7 @@ public class Commands extends ListenerAdapter {
 				// Check for if inputs valid
 				if (names.length!=amounts.length) {
 					EmbedBuilder invalidRemove = new EmbedBuilder();
-					invalidRemove.setDescription("Remove must be in format \"expense remove (item) (names ...) (amounts ...)\"");
+					invalidRemove.setDescription("Remove must be in format \"expense remove (item) (names ...) (amounts ...)\".");
 
 					event.getChannel().sendTyping().queue();
 					event.getChannel().sendMessage(invalidRemove.build()).queue();
@@ -81,20 +80,22 @@ public class Commands extends ListenerAdapter {
 					}
 					for (int i = 0; i < names.length; i ++) {
 						Pair temp = new Pair(payeeID, names[i]);
-						if(expenses.containsKey(temp)) {
-							oldVal[i] = expenses.get(temp);
-							preremove.append(names[i]+": " + expenses.get(temp) + "\n");
+						if(Main.expenses.containsKey(temp)) {
+							oldVal[i] = Main.expenses.get(temp);
+							preremove.append(names[i]+": " + Main.expenses.get(temp) + "\n");
 						} else {
 							oldVal[i] = 0;
 							preremove.append(names[i]+": 0 \n");
+							Main.expenses.put(temp, 0);
 						}
 					}
 
 					// Post-removal
 					for (int i = 0; i < amounts.length; i ++) {
 						Pair temp = new Pair(payeeID, names[i]);
-						expenses.put(temp, expenses.get(temp) - amounts[i]); // adjust amount
-						postremove.append(names[i]+": " + expenses.get(temp) + "\n");
+						int tempremove = Main.expenses.get(temp);
+						Main.expenses.put(temp, tempremove - amounts[i]); // adjust amount
+						postremove.append(names[i]+": " + Main.expenses.get(temp) + "\n");
 					}
 
 					// Adjust embed output for before and after operation.
@@ -119,7 +120,7 @@ public class Commands extends ListenerAdapter {
 					EmbedBuilder invalidAdd = new EmbedBuilder();
 					System.out.println(names.length);
 					System.out.println(amounts.length);
-					invalidAdd.setDescription("Add must be in format \"expense add (item) (names ...) (amounts ...)\"");
+					invalidAdd.setDescription("Add must be in format \"expense add (item) (names ...) (amounts ...)\".");
 
 					event.getChannel().sendTyping().queue();
 					event.getChannel().sendMessage(invalidAdd.build()).queue();
@@ -132,33 +133,42 @@ public class Commands extends ListenerAdapter {
 					add.setColor(0x26d90b);
 					add.setTitle("🥳 Expense Add Summary");
 					add.setDescription("Addition of expenses payable to " + payee +  ".");
-					// Set up pre-remove and post-remove messages that will be appended to later
+					// Set up pre-add and post-add messages that will be appended to later
 					MessageBuilder preadd = new MessageBuilder();
 					MessageBuilder postadd = new MessageBuilder();
 
-					// Pre-removal
+					// Pre-add
 					for (int i = 3; i < names.length+3; i ++) {
 						names[i-3] = args[i];
 						amounts[i-3] = Integer.valueOf(args[i+names.length]);
 					}
 					for (int i = 0; i < names.length; i ++) {
 						Pair temp = new Pair(payeeID, names[i]);
-						if(expenses.containsKey(temp)) {
-							oldVal[i] = expenses.get(temp);
-							preadd.append(names[i]+": " + expenses.get(temp) + "\n");
+						if(Main.expenses.containsKey(temp)) {
+							oldVal[i] = Main.expenses.get(temp);
+							preadd.append(names[i]+": " + Main.expenses.get(temp) + "\n");
 						} else {
+							System.out.println("execute put");
 							oldVal[i] = 0;
 							preadd.append(names[i]+": 0 \n");
+							Main.expenses.put(temp, 0);
+							System.out.println(Main.expenses.containsKey(temp));
 						}
 					}
+					System.out.println("passed1");
+					System.out.println(Main.expenses.toString());
+					Pair a = new Pair (payeeID, "anson");
+					System.out.println(Main.expenses.containsKey(a));
 
-					// Post-removal
+					// Post-add
 					for (int i = 0; i < amounts.length; i ++) {
-						Pair temp = new Pair(payeeID, names[i]);
-						expenses.put(temp, expenses.get(temp) + amounts[i]); // adjust amount
-						postadd.append(names[i]+": " + expenses.get(temp) + "\n");
+						Pair temp = new Pair(payeeID, names[i]); // the problem is because your pair is an instance!!!
+						int tempadd = Main.expenses.get(temp);
+						Main.expenses.put(temp, tempadd + amounts[i]); // adjust amount
+						postadd.append(names[i]+": " + Main.expenses.get(temp) + "\n");
 					}
-
+					System.out.println("passed2");
+					
 					// Adjust embed output for before and after operation.
 					add.addField("Pre-Addition Owing Balances", preadd.build().toString(), false);
 					add.addField("Post-Addition Owing Balances", postadd.build().toString(), false);
@@ -172,7 +182,7 @@ public class Commands extends ListenerAdapter {
 				}
 			} else if (args[0].equals("expense")) {
 				EmbedBuilder expense = new EmbedBuilder();
-				expense.setDescription("Please enter a valid command. Try \"expense help\"");
+				expense.setDescription("Please enter a valid command. Try \"expense help\".");
 
 				event.getChannel().sendTyping().queue();
 				event.getChannel().sendMessage(expense.build()).queue();
@@ -181,7 +191,7 @@ public class Commands extends ListenerAdapter {
 		} catch (Exception e) {
 			System.out.println(e);
 			EmbedBuilder expense = new EmbedBuilder();
-			expense.setDescription("Please enter a valid command. Try \"expense help\"");
+			expense.setDescription("Please enter a valid command. Try \"expense help\".");
 
 			event.getChannel().sendTyping().queue();
 			event.getChannel().sendMessage(expense.build()).queue();

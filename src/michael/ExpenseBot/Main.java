@@ -15,10 +15,10 @@ import net.dv8tion.jda.api.entities.Member;
 
 public class Main {
 	public static JDA jda;
-	// public static Map<Pair,Integer> expenses = new HashMap<Pair,Integer>();
+	public static Map<Pair,Integer> expenses = new HashMap<Pair,Integer>();
 	
 	public static void main(String[]args) throws LoginException{
-		jda = new JDABuilder(AccountType.BOT).setToken("filler").build();
+		jda = new JDABuilder(AccountType.BOT).setToken("NzkxODAwMDYzMjgxMzMyMjM0.X-UbRg.EjmYoSu33QNbKz084wRTWH3aD-o").build();
 		jda.getPresence().setStatus(OnlineStatus.ONLINE);
 		jda.getPresence().setActivity(Activity.streaming("Live View", "https://www.youtube.com/watch?v=dQw4w9WgXcQ"));
 		
