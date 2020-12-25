@@ -63,7 +63,7 @@ public class Commands extends ListenerAdapter {
 				} else {
 					// Set payee info (event invoker user)
 					String payee = event.getMember().getNickname();
-					String payeeID = event.getMessageId();
+					String payeeID = event.getMember().getId();
 					// Build output embed
 					EmbedBuilder remove = new EmbedBuilder();
 					remove.setColor(0xeb6e60);
@@ -80,9 +80,9 @@ public class Commands extends ListenerAdapter {
 					}
 					for (int i = 0; i < names.length; i ++) {
 						Pair temp = new Pair(payeeID, names[i]);
-						if(Main.expenses.containsKey(temp)) {
-							oldVal[i] = Main.expenses.get(temp);
-							preremove.append(names[i]+": " + Main.expenses.get(temp) + "\n");
+						if(keyPresent(temp)) {
+							oldVal[i] = getValue(temp);
+							preremove.append(names[i]+": " + getValue(temp) + "\n");
 						} else {
 							oldVal[i] = 0;
 							preremove.append(names[i]+": 0 \n");
@@ -93,14 +93,15 @@ public class Commands extends ListenerAdapter {
 					// Post-removal
 					for (int i = 0; i < amounts.length; i ++) {
 						Pair temp = new Pair(payeeID, names[i]);
-						int tempremove = Main.expenses.get(temp);
-						Main.expenses.put(temp, tempremove - amounts[i]); // adjust amount
-						postremove.append(names[i]+": " + Main.expenses.get(temp) + "\n");
+						minusValue(temp, amounts[i]); // adjust amount
+						postremove.append(names[i]+": " + getValue(temp) + "\n");
 					}
 
 					// Adjust embed output for before and after operation.
-					remove.addField("Pre-Removal Owing Balances", preremove.build().toString(), false);
-					remove.addField("Post-Removal Owing Balances", postremove.build().toString(), false);
+					String[] arrOfStr = preremove.build().toString().split("\\(");
+					remove.addField("Pre-Removal Owing Balances", arrOfStr[1].substring(0,arrOfStr[1].length()-1), false);
+					String[] arrOfStr2 = postremove.build().toString().split("\\(");
+					remove.addField("Post-Removal Owing Balances", arrOfStr2[1].substring(0,arrOfStr2[1].length()-1), false);
 
 					// Send Message
 					event.getChannel().sendTyping().queue();
@@ -127,7 +128,7 @@ public class Commands extends ListenerAdapter {
 				} else {
 					// Set payee info (event invoker user)
 					String payee = event.getMember().getNickname();
-					String payeeID = event.getMessageId();
+					String payeeID = event.getMember().getId();
 					// Build output embed
 					EmbedBuilder add = new EmbedBuilder();
 					add.setColor(0x26d90b);
@@ -144,34 +145,28 @@ public class Commands extends ListenerAdapter {
 					}
 					for (int i = 0; i < names.length; i ++) {
 						Pair temp = new Pair(payeeID, names[i]);
-						if(Main.expenses.containsKey(temp)) {
-							oldVal[i] = Main.expenses.get(temp);
-							preadd.append(names[i]+": " + Main.expenses.get(temp) + "\n");
+						if(keyPresent(temp)) {
+							oldVal[i] = getValue(temp);
+							preadd.append(names[i]+": " + getValue(temp) + "\n");
 						} else {
-							System.out.println("execute put");
 							oldVal[i] = 0;
 							preadd.append(names[i]+": 0 \n");
 							Main.expenses.put(temp, 0);
-							System.out.println(Main.expenses.containsKey(temp));
 						}
 					}
-					System.out.println("passed1");
-					System.out.println(Main.expenses.toString());
-					Pair a = new Pair (payeeID, "anson");
-					System.out.println(Main.expenses.containsKey(a));
 
 					// Post-add
 					for (int i = 0; i < amounts.length; i ++) {
-						Pair temp = new Pair(payeeID, names[i]); // the problem is because your pair is an instance!!!
-						int tempadd = Main.expenses.get(temp);
-						Main.expenses.put(temp, tempadd + amounts[i]); // adjust amount
-						postadd.append(names[i]+": " + Main.expenses.get(temp) + "\n");
+						Pair temp = new Pair(payeeID, names[i]);
+						addValue(temp, amounts[i]); // adjust amount
+						postadd.append(names[i]+": " + getValue(temp) + "\n");
 					}
-					System.out.println("passed2");
 					
 					// Adjust embed output for before and after operation.
-					add.addField("Pre-Addition Owing Balances", preadd.build().toString(), false);
-					add.addField("Post-Addition Owing Balances", postadd.build().toString(), false);
+					String[] arrOfStr = preadd.build().toString().split("\\("); 
+					add.addField("Pre-Addition Owing Balances", arrOfStr[1].substring(0,arrOfStr[1].length()-1), false);
+					String[] arrOfStr2 = postadd.build().toString().split("\\("); 
+					add.addField("Post-Addition Owing Balances", arrOfStr2[1].substring(0,arrOfStr2[1].length()-1), false);
 
 					// Send Message
 					event.getChannel().sendTyping().queue();
@@ -208,6 +203,49 @@ public class Commands extends ListenerAdapter {
 			}
 		}
 		return length;
+	}
+	private boolean keyPresent(Pair a) {
+		for (Pair key : Main.expenses.keySet()) {
+			if(a.equals(key)) {
+				return true;
+			}
+		}
+		return false;
+	}
+	private int getValue(Pair a) {
+		if (keyPresent(a)) {
+			for (Pair key : Main.expenses.keySet()) {
+				if(a.equals(key)) {
+					return Main.expenses.get(key);
+				}
+			}
+		} 
+		throw new IndexOutOfBoundsException("getValue for pair error");
+		
+	}
+	private void addValue(Pair a, int amount) {
+		if (keyPresent(a)) {
+			for (Pair key : Main.expenses.keySet()) {
+				if(a.equals(key)) {
+					Main.expenses.put(key, Main.expenses.get(key)+amount);
+				}
+			}
+		} else {
+			throw new IndexOutOfBoundsException("setValue for pair error");
+		}
+	}
+	private void minusValue(Pair a, int amount) {
+		if (keyPresent(a)) {
+			for (Pair key : Main.expenses.keySet()) {
+				if(a.equals(key)) {
+					System.out.println(Main.expenses.get(key));
+					Main.expenses.put(key, Main.expenses.get(key)-amount);
+					System.out.println(Main.expenses.get(key));
+				}
+			}
+		} else {
+			throw new IndexOutOfBoundsException("minusValue for pair error");
+		}
 	}
 
 }

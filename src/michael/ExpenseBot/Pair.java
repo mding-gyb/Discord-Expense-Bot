@@ -8,12 +8,14 @@ public class Pair {
         this.y = y;
     }
 
+    
     public boolean equals(Object o){
         if(o instanceof Pair){
             Pair p = (Pair) o;
-            return p.x == x && p.y == y;
+            return (p.x.equals(x) && p.y.equals(y));
         } else{
             return false;
         }
     }
+
 }
