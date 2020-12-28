@@ -17,5 +17,13 @@ public class Pair {
             return false;
         }
     }
+    
+    public String getX() {
+    	return this.x;
+    }
+    
+    public String getY() {
+    	return this.y;
+    }
 
 }
